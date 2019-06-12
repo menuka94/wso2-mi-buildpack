@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# bin/detect <build-dir>
+
+# This script determines whether or not to apply the buildpack to an app
+
+echo "----> Running detect"
+# Application root directory should contain the configuration file "wso2-mi"
+APP_DIR=${1}
+if [[ -f "${APP_DIR}/wso2-mi" ]]; then
+  exit 0
+fi
+
+exit 1

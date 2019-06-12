@@ -1,0 +1,89 @@
+#!/bin/bash
+# This script provides dependencies for an app
+
+set -euo pipefail
+
+APP_DIR=$1
+CACHE_DIR=$2
+DEPS_DIR=$3
+DEPS_IDX=$4
+
+echo "-----> Running supply --------------"
+
+export BUILD_PACK_DIR=$(dirname $(dirname $0))
+RESOURCES_DIR="${BUILD_PACK_DIR}/resources"
+
+echo "-----> Creating ${DEPS_DIR}/${DEPS_IDX} directory"
+#  creates a directory for storing deps
+if ! mkdir -p ${DEPS_DIR}/${DEPS_IDX};
+ then
+    echo  "couldn't create the directory ${DEPS_DIR}/${DEPS_IDX}"
+    exit 1
+fi
+
+# Java
+JDK_VERSION="jdk-8u161-linux-x64"
+JDK_TAR="${JDK_VERSION}.tar.gz"
+
+echo "-----> Creating ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION}"
+if ! mkdir -p ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION};
+ then
+    echo  "couldn't create the directory ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION}"
+    exit 1
+fi
+
+echo "-----> Unpacking JDK: ${JDK_TAR} to  ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION}"
+if ! tar -xf ${RESOURCES_DIR}/${JDK_TAR} -C ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION};
+ then
+  echo  "couldn't extract the JDK to ${DEPS_DIR}/${DEPS_IDX}"
+  exit 1
+fi
+
+echo "-----> Creating ${DEPS_DIR}/${DEPS_IDX}/config.yml"
+cat << EOF > ${DEPS_DIR}/${DEPS_IDX}/config.yml
+---
+config:
+  JDKVersion: jdk-8u161-linux-x64
+name: wso2-mi
+version: 1.0.0
+EOF
+
+# Maven
+MVN_VERSION="apache-maven-3.3.9"
+MVN_TAR="${MVN_VERSION}-bin.tar.gz"
+
+echo "-----> Creating ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION}"
+if ! mkdir -p ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION};
+ then
+    echo  "couldn't create the directory ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION}"
+    exit 1
+fi
+
+echo "-----> Unpacking Maven: ${MVN_TAR} to  ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION}"
+if ! tar -xf ${RESOURCES_DIR}/${MVN_TAR} -C ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION};
+ then
+    echo  "couldn't extract Maven to ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION}"
+    exit 1
+fi
+
+
+# setting env variables
+echo $(cat ${DEPS_DIR}/${DEPS_IDX}/config.yml)
+echo $(ls -l ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION})
+echo $(ls -l ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION})
+
+
+echo "-----> Creating ${DEPS_DIR}/${DEPS_IDX}/profile.d/env"
+if ! mkdir -p ${DEPS_DIR}/${DEPS_IDX}/profile.d;
+ then
+    echo  "couldn't create the directory ${DEPS_DIR}/${DEPS_IDX}/profile.d"
+    exit 1
+fi
+
+cat << EOF > ${DEPS_DIR}/${DEPS_IDX}/profile.d/env
+export JAVA_HOME="/home/vcap/deps/${DEPS_IDX}/${JDK_VERSION}"
+export M2_HOME="/home/vcap/deps/${DEPS_IDX}/${MVN_VERSION}"
+EOF
+
+
+echo "------> Finished running supply"
