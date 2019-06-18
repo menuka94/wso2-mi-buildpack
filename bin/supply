@@ -22,18 +22,12 @@ if ! mkdir -p ${DEPS_DIR}/${DEPS_IDX};
 fi
 
 # Java
-JDK_VERSION="jdk-8u161-linux-x64"
-JDK_TAR="${JDK_VERSION}.tar.gz"
+JDK_VERSION="jdk1.8.0_161"
 
-echo "-----> Creating ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION}"
-if ! mkdir -p ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION};
- then
-    echo  "couldn't create the directory ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION}"
-    exit 1
-fi
+JDK_TAR="jdk-8u161-linux-x64.tar.gz"
 
-echo "-----> Unpacking JDK: ${JDK_TAR} to  ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION}"
-if ! tar -xf ${RESOURCES_DIR}/${JDK_TAR} -C ${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION};
+echo "-----> Unpacking JDK: ${JDK_TAR} to  ${DEPS_DIR}/${DEPS_IDX}"
+if ! tar -xf ${RESOURCES_DIR}/${JDK_TAR} -C ${DEPS_DIR}/${DEPS_IDX};
  then
   echo  "couldn't extract the JDK to ${DEPS_DIR}/${DEPS_IDX}"
   exit 1
@@ -44,7 +38,7 @@ cat << EOF > ${DEPS_DIR}/${DEPS_IDX}/config.yml
 ---
 config:
   JDKVersion: jdk-8u161-linux-x64
-name: wso2-mi
+name: wso2_micro_integrator_buildpack
 version: 1.0.0
 EOF
 
@@ -52,17 +46,11 @@ EOF
 MVN_VERSION="apache-maven-3.3.9"
 MVN_TAR="${MVN_VERSION}-bin.tar.gz"
 
-echo "-----> Creating ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION}"
-if ! mkdir -p ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION};
- then
-    echo  "couldn't create the directory ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION}"
-    exit 1
-fi
 
-echo "-----> Unpacking Maven: ${MVN_TAR} to  ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION}"
-if ! tar -xf ${RESOURCES_DIR}/${MVN_TAR} -C ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION};
+echo "-----> Unpacking Maven: ${MVN_TAR} to  ${DEPS_DIR}/${DEPS_IDX}"
+if ! tar -xf ${RESOURCES_DIR}/${MVN_TAR} -C ${DEPS_DIR}/${DEPS_IDX};
  then
-    echo  "couldn't extract Maven to ${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION}"
+    echo  "couldn't extract Maven to ${DEPS_DIR}/${DEPS_IDX}"
     exit 1
 fi
 

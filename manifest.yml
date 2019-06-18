@@ -1,12 +1,13 @@
 ---
 language: wso2-mi
 default_versions: []
-dependencies: []
+dependencies:
+  - name: java
+  - name: mvn
 include_files:
   - bin/detect
   - bin/finalize
   - bin/supply
-  - bin/release
   - resources/jdk-8u161-linux-x64.tar.gz
   - resources/apache-maven-3.3.9-bin.tar.gz
   - resources/wso2mi-1.1.0-SNAPSHOT.zip
