@@ -28,9 +28,11 @@ CURRENT_DIR=$(pwd)
 cd ${APP_DIR}
 
 echo "-----> Building the WSO2 CompositeApp"
-mvn clean install -X
+mvn clean install
 
-cd ${CURRENT_DIR}CURRENT_DIR;
+cd ${CURRENT_DIR};
+
+echo "-----> App Build completed"
 
 TMP_DIR=$(mktemp -d -t finalizeXXX)
 
@@ -41,23 +43,21 @@ if ! unzip -q -d ${TMP_DIR} ${BUILDPACK_DIR}/resources/${WSO2_MI_ZIP};
     exit 1
 fi
 
+# Copy the CAR file to the Micro Integrator
+FILE="${APP_DIR}/target/*.car"
+TARGET="${TMP_DIR}/${WSO2_MI_VERSION}/repository/deployment/server/carbonapps"
+#if [[ -f "$FILE" ]]; then
+if ls ${FILE} 1> /dev/null 2>&1; then
+    echo "Copying car ${FILE} to ${TARGET}"
+    cp ${FILE} ${TARGET}
+else
+    echo "Car file does not exist!. Exiting ..."
+    exit 1
+fi
+
 echo "-----> Starting WSO2 Micro Integrator ..."
 ${TMP_DIR}/${WSO2_MI_VERSION}/bin/micro-integrator.sh
 
-#echo "-----> Unzipping Micro Integrator distribution"
-#if ! unzip -q -d ${APP_DIR} $(pwd)/cf/target/mi-cf.zip;
-# then
-#   echo "unable to unzip the project zip: mi-cf.zip"
-#   exit 1
-#fi
-
-
-#echo "-----> Setting up permission"
-#if ! chmod +x ${APP_DIR}/mi-cf/bin/micro-integrator.sh;
-# then
-#    echo  "couldn't configure permission for ${APP_DIR}/mi-cf/bin/"
-#    exit 1
-#fi
 
 echo "-----> Create the directory ${APP_DIR}/.profile.d"
 # to add envs create a bash script with required env in .profile.d
@@ -67,12 +67,12 @@ if ! mkdir -p ${APP_DIR}/.profile.d;
     exit 1
 fi
 
-echo "-----> Setting up environment variables"
-if ! echo "export JAVA_HOME=/home/vcap/deps/${DEPS_IDX}/${JDK_VERSION}" >> "${APP_DIR}/.profile.d/env";
- then
-    echo  "couldn't configure the env in ${APP_DIR}/.profile.d"
-    exit 1
-fi
+#echo "-----> Setting up environment variables"
+#if ! echo "export JAVA_HOME=/home/vcap/deps/${DEPS_IDX}/${JDK_VERSION}" >> "${APP_DIR}/.profile.d/env";
+# then
+#    echo  "couldn't configure the env in ${APP_DIR}/.profile.d"
+#    exit 1
+#fi
 
 
 echo "----> Finished running finalize"
