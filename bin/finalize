@@ -22,7 +22,7 @@ echo $PATH
 output_dir=$(mktemp -d -t finalizeXXX)
 
 
-CONFIG_FILE="./config"
+CONFIG_FILE="./wso2-mi"
 
 echo "-----> Running finalize"
 
