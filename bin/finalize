@@ -9,7 +9,7 @@ DEPS_DIR=$3
 DEPS_IDX=$4
 PROFILE_DIR=${5:-}
 
-WSO2_MI_VERSION="wso2mi-1.1.0-SNAPSHOT"
+export WSO2_MI_VERSION="wso2mi-1.1.0-SNAPSHOT"
 WSO2_MI_ZIP="${WSO2_MI_VERSION}.zip"
 JDK_VERSION="jdk1.8.0_161"
 MVN_VERSION="apache-maven-3.3.9"
@@ -18,34 +18,33 @@ export BUILDPACK_DIR=$(dirname $(dirname $0))
 export JAVA_HOME="${DEPS_DIR}/${DEPS_IDX}/${JDK_VERSION}"
 export MVN_HOME=${DEPS_DIR}/${DEPS_IDX}/${MVN_VERSION}
 export PATH="$PATH:${JAVA_HOME}/bin:${MVN_HOME}/bin"
-echo $PATH
-output_dir=$(mktemp -d -t finalizeXXX)
+#echo $PATH
+#output_dir=$(mktemp -d -t finalizeXXX)
 
 echo "-----> Running finalize"
 
-#source "${APP_DIR}/wso2-mi"
-CURRENT_DIR=$(pwd)
-cd ${APP_DIR}
+pushd ${APP_DIR}
 
-echo "-----> Building the WSO2 CompositeApp"
-mvn clean install
+echo "-----> Building CAR apps"
+mvn -B clean install
 
-cd ${CURRENT_DIR};
+popd
 
-echo "-----> App Build completed"
+echo "-----> Build completed"
 
-TMP_DIR=$(mktemp -d -t finalizeXXX)
+#TMP_DIR=$(mktemp -d -t finalizeXXX)
 
 echo "-----> Unzipping ${BUILDPACK_DIR}/resources/${WSO2_MI_ZIP}"
-if ! unzip -q -d ${TMP_DIR} ${BUILDPACK_DIR}/resources/${WSO2_MI_ZIP};
+if ! unzip -q -d ${APP_DIR} ${BUILDPACK_DIR}/resources/${WSO2_MI_ZIP};
  then
     echo "unable to unzip ${WSO2_MI_ZIP}"
     exit 1
 fi
 
 # Copy the CAR file to the Micro Integrator
-FILE="${APP_DIR}/target/*.car"
-TARGET="${TMP_DIR}/${WSO2_MI_VERSION}/repository/deployment/server/carbonapps"
+#FILE="${APP_DIR}/target/*.car"
+FILE=$(find . -type f -iname \*.car)
+TARGET="${APP_DIR}/${WSO2_MI_VERSION}/repository/deployment/server/carbonapps"
 #if [[ -f "$FILE" ]]; then
 if ls ${FILE} 1> /dev/null 2>&1; then
     echo "Copying car ${FILE} to ${TARGET}"
@@ -54,9 +53,6 @@ else
     echo "Car file does not exist!. Exiting ..."
     exit 1
 fi
-
-echo "-----> Starting WSO2 Micro Integrator ..."
-${TMP_DIR}/${WSO2_MI_VERSION}/bin/micro-integrator.sh
 
 
 echo "-----> Create the directory ${APP_DIR}/.profile.d"
@@ -67,12 +63,47 @@ if ! mkdir -p ${APP_DIR}/.profile.d;
     exit 1
 fi
 
-#echo "-----> Setting up environment variables"
-#if ! echo "export JAVA_HOME=/home/vcap/deps/${DEPS_IDX}/${JDK_VERSION}" >> "${APP_DIR}/.profile.d/env";
-# then
-#    echo  "couldn't configure the env in ${APP_DIR}/.profile.d"
-#    exit 1
-#fi
+echo "-----> Setting up environment variable - JAVA_HOME"
+if ! echo "export JAVA_HOME=/home/vcap/deps/${DEPS_IDX}/${JDK_VERSION}" >> "${APP_DIR}/.profile.d/env";
+ then
+    echo  "couldn't configure the env in ${APP_DIR}/.profile.d"
+    exit 1
+fi
+
+
+echo "-----> Setting up permission"
+if ! chmod +x ${APP_DIR}/${WSO2_MI_VERSION}/bin/micro-integrator.sh;
+ then
+    echo  "couldn't configure permission for ${APP_DIR}/${WSO2_MI_VERSION}/bin/micro-integrator.sh"
+    exit 1
+fi
+
+
+echo "-----> Create the directory ${APP_DIR}/.profile.d"
+# to add envs create a bash script with required env in .profile.d
+if ! mkdir -p ${APP_DIR}/.profile.d;
+ then
+    echo  "couldn't create the directory ${APP_DIR}/.profile.d"
+    exit 1
+fi
+
+echo "-----> Setting up environment variables"
+if ! echo "export JAVA_HOME=/home/vcap/deps/${DEPS_IDX}/${JDK_VERSION}" >> "${APP_DIR}/.profile.d/env";
+ then
+    echo  "couldn't configure the env in ${APP_DIR}/.profile.d"
+    exit 1
+fi
+
+
+echo "ls ${APP_DIR}"
+pushd ${APP_DIR}
+ls;
+popd
+
+echo "ls /tmp/app/${WSO2_MI_VERSION}"
+pushd /tmp/app/${WSO2_MI_VERSION}
+ls;
+popd
 
 
 echo "----> Finished running finalize"
